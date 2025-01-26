@@ -63,8 +63,6 @@ runs:
       with:
         script: |
           const fs = require('fs');
-          const core = require('@actions/core');
-          
           try {
             // 读取扫描结果
             const results = fs.readFileSync('scan_result.txt', 'utf8');
