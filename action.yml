@@ -21,10 +21,8 @@ runs:
       shell: bash
       run: |
         if [ "${{ inputs.scan_mode }}" = "all" ]; then
-          echo "全量扫描模式：解除克隆深度限制"
           git fetch --prune --unshallow 2> /dev/null || true
         else
-          echo "差异扫描模式：仅获取最新提交"
           git fetch --depth=1
         fi
       env:
@@ -33,23 +31,19 @@ runs:
     - name: Secret Detection
       shell: bash
       run: |
-        # 初始化检测结果
-        echo "LEAKED_SECRETS=" > scan_result.txt
-        echo "HAS_LEAKS=false" >> $GITHUB_ENV
-
-        # 即使脚本出错也继续执行后续逻辑
         set +e
         source ${{ github.action_path }}/entrypoint.sh
         exit_code=$?
         set -e
 
-        # 记录脚本执行结果
+        # 结果记录到环境变量
         if [ -s scan_result.txt ]; then
-          echo "::error::发现敏感信息"
           echo "HAS_LEAKS=true" >> $GITHUB_ENV
+        else
+          echo "HAS_LEAKS=false" >> $GITHUB_ENV
         fi
-
-        # 始终返回成功状态以保证后续步骤执行
+        
+        # 始终返回成功以保证后续步骤执行
         exit 0
       continue-on-error: true
       env:
@@ -58,30 +52,27 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
 
     - name: Post PR Comment
-      if: ${{ env.HAS_LEAKS == 'true' && github.event_name == 'push' }}  # TODO: change push into pull_request
+      if: ${{ env.HAS_LEAKS == 'true' && github.event_name == 'pull_request' }}
       uses: actions/github-script@v6
       with:
         script: |
           const fs = require('fs');
           try {
-            // 读取扫描结果
             const results = fs.readFileSync('scan_result.txt', 'utf8');
-            
-            // 构造评论内容（注意使用模板字符串的正确格式）
-            const comment = `⚠️ **安全警报** ⚠️
-            扫描模式: ${process.env.SCAN_MODE}
-            检测到以下敏感信息：
-            ${results}`;
-
-            // 发布评论
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: comment
+              body: `⚠️ 检测到敏感信息：\n${results}`
             });
-            
-            core.info("评论已添加");
           } catch (e) {
-            core.error("评论失败: " + e.message);
+            core.error(`评论失败: ${e}`);
           }
+
+    - name: Check Results
+      shell: bash
+      run: |
+        if [ "$HAS_LEAKS" = "true" ]; then
+          echo "::error::发现敏感信息，流程终止"
+          exit 1
+        fi
