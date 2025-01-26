@@ -20,8 +20,8 @@ jobs:
       
       - name: Get ALL PR commits (if open/reopen)
         if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
-        # env:  # TODO: 这里取消注释试试
-        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
           REPO_FULL_NAME=${{ github.repository }}
@@ -41,8 +41,8 @@ jobs:
       
       - name: Get NEW PR commits (if synchronize)
         if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
-        # env:
-        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BEFORE_SHA=${{ github.event.before }}
           AFTER_SHA=${{ github.event.after }}
