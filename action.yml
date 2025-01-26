@@ -53,24 +53,32 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
 
     - name: Post PR Comment
-      if: ${{ env.HAS_LEAKS == 'true' && github.event_name == 'pull_request' }}
+      if: ${{ env.HAS_LEAKS == 'true' && github.event_name == 'push' }}  # TODO: change push into pull_request
       uses: actions/github-script@v6
       with:
         script: |
-          const fs = require('fs')
+          const fs = require('fs');
+          const core = require('@actions/core');
+          
           try {
-            const results = fs.readFileSync('scan_result.txt', 'utf8')
-            const comment = `⚠️ **安全警报** ⚠️
-              扫描模式: ${process.env.SCAN_MODE}
-              检测到以下敏感信息：
-              ${results}`
+            // 读取扫描结果
+            const results = fs.readFileSync('scan_result.txt', 'utf8');
             
+            // 构造评论内容（注意使用模板字符串的正确格式）
+            const comment = `⚠️ **安全警报** ⚠️
+            扫描模式: ${process.env.SCAN_MODE}
+            检测到以下敏感信息：
+            ${results}`;
+
+            // 发布评论
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: comment
-            })
+            });
+            
+            core.info("评论已添加");
           } catch (e) {
-            core.error("评论失败: " + e.message)
+            core.error("评论失败: " + e.message);
           }

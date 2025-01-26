@@ -2,7 +2,7 @@
  # @Author: LetMeFly
  # @Date: 2025-01-26 12:25:39
  # @LastEditors: LetMeFly.xyz
- # @LastEditTime: 2025-01-26 17:03:21
+ # @LastEditTime: 2025-01-26 17:43:28
 ### 
 #!/bin/bash
 
@@ -81,11 +81,12 @@ if [ -n "$FOUND_SECRETS" ]; then
     PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
     COMMENT="⚠️ **全量扫描安全警报** ⚠️\n检测到以下敏感信息：${FOUND_SECRETS}"
     
-    curl -s -X POST \
-      -H "Authorization: token $GITHUB_TOKEN" \
-      -H "Accept: application/vnd.github.v3+json" \
-      "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
-      -d "{\"body\":\"$COMMENT\"}"
+    # curl -s -X POST \
+    #   -H "Authorization: token $GITHUB_TOKEN" \
+    #   -H "Accept: application/vnd.github.v3+json" \
+    #   "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
+    #   -d "{\"body\":\"$COMMENT\"}"
+    echo "${COMMENT}"
   fi
   
   exit 1
