@@ -24,22 +24,34 @@ jobs:
           PR_NUMBER=${{ github.event.pull_request.number }}
           REPO_FULL_NAME=${{ github.repository }}
           APIURL="https://api.github.com/repos/$REPO_FULL_NAME/pulls/$PR_NUMBER/commits"
-          
-          echo "===== [Debug] RAW API RESPONSE ====="
-          # 禁用 curl 的失败退出，强制输出原始响应（包括错误）
-          curl -v -s -H "Authorization: Bearer $GITHUB_TOKEN" "$APIURL" > response.json 2> curl.log || true
-          
-          echo "===== [Debug] HTTP Status Code ====="
-          grep "HTTP/" curl.log | tail -n 1
 
-          echo "===== [Debug] Response Body ====="
-          cat response.json
+          echo "===== [Debug] TRY USING GH ====="
+          # TODO: not login?
+          # https://docs.github.com/zh/rest/pulls/pulls?apiVersion=2022-11-28#list-commits-on-a-pull-request
+          GH_APIURI="/repos/$REPO_FULL_NAME/pulls/$PR_NUMBER/commits"
+          echo "GH_APIURI: $GH_APIURI"
+          RESPONSE=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            $GH_APIURI)
+          echo "API Response:"
+          echo "$RESPONSE"
+          
+          # echo "===== [Debug] RAW API RESPONSE ====="
+          # # 禁用 curl 的失败退出，强制输出原始响应（包括错误）
+          # curl -v -s -H "Authorization: Bearer $GITHUB_TOKEN" "$APIURL" > response.json 2> curl.log || true
+          
+          # echo "===== [Debug] HTTP Status Code ====="
+          # grep "HTTP/" curl.log | tail -n 1
 
-          echo "===== [Debug] Full Curl Log ====="
-          cat curl.log
+          # echo "===== [Debug] Response Body ====="
+          # cat response.json
+
+          # echo "===== [Debug] Full Curl Log ====="
+          # cat curl.log
       
       - name: Get NEW PR commits (if synchronize)
-        if: github.event_name == 'pull_request' && github.event.actionn == 'synchronize'
+        if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
