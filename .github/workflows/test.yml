@@ -1,26 +1,26 @@
-# 写一个githubAction，当pr时触发，添加评论“Hello From [Tisfy](https://github.com/Tisfy)”
-name: PR Comment Automation
-
+# Github Action中，可以设置PR时触发。但是如果PR后merge前又新增了commit，有没有办法触发？
+# Action获取PR的所有commit、获取synchronize时新增的commit
+# 这个$GITHUB_TOKEN需要用户设置吗，还是自动就能获取到？
+# 这是我写的yml，请你帮忙检查其中是否有错误
+name: PR Commit Info
 on:
   pull_request:
-    types: [opened]
+    types: [opened, synchronize, reopened]
 
 jobs:
-  add-comment:
+  get-commits:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
     steps:
-      - name: Add greeting comment
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.pull_request.number,
-              body: 'Hello From [Tisfy](https://github.com/Tisfy)'
-            })
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      -name: Get ALL PR commits (if open/reopen)
+        if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+
 
 # name: Let Secret Check
 # on: [push, pull_request]

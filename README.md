@@ -2,7 +2,7 @@
  * @Author: LetMeFly
  * @Date: 2025-01-26 12:24:51
  * @LastEditors: LetMeFly.xyz
- * @LastEditTime: 2025-01-26 12:36:32
+ * @LastEditTime: 2025-01-26 18:38:44
 -->
 # secret-monitor
 
@@ -32,11 +32,17 @@ steps:
 |---------------|----------|--------------------|
 | custom_prefix | LetSecret | 环境变量前缀       |
 
-## End
+## 开发日志
 
-这个方案实现了：
+### v0.1尝试用DeepSeek写
 
-1. **开箱即用**：使用者只需配置环境变量即可启用
-2. **零成本集成**：无需维护服务器，完全基于GitHub生态
-3. **双重检测模式**：同时支持明文和正则表达式检测
-4. **精准定位**：在PR中直接标记问题位置，降低修复成本
+Debug的时间都够自己写了
+
+### v0.2分功能实现
+
+**所需功能**
+
+- [x] 在action中评论（[Code](https://github.com/LetMeFly666/secret-monitor/blob/4281d9a07bd253fca65731369c9748affaa33074/.github/workflows/test.yml#L2-L23)）
+- [ ] 某commit所有文件检测是否存在密钥，并保存结果
+- [ ] 读取某次PR的所有commit、向PR中新增commit
+
