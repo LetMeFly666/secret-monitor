@@ -1,7 +1,5 @@
-# Github Action中，可以设置PR时触发。但是如果PR后merge前又新增了commit，有没有办法触发？
-# Action获取PR的所有commit、获取synchronize时新增的commit
-# 这个$GITHUB_TOKEN需要用户设置吗，还是自动就能获取到？
 # 这是我写的yml，请你帮忙检查其中是否有错误
+# 现在先实现一个新开PR，待会儿再实现往已有PR上新增commit
 name: PR Commit Info
 on:
   pull_request:
@@ -13,13 +11,32 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Install jq
+        run: sudo apt-get install -y jq
       
-      -name: Get ALL PR commits (if open/reopen)
+      - name: Get ALL PR commits (if open/reopen)
         if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
+          REPO_FULL_NAME=${{ github.repository }}
+          echo "PR_NUMBER = $PR_NUMBER"
+          echo "REPO_FULL_NAME = $REPO_FULL_NAME"
+          COMMITS=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/repos/$REPO_FULL_NAME/pulls/$PR_NUMBER/commits")
+          echo "All commits in PR:"
+          echo "$COMMITS" | jq '.[].sha'
+          echo "$COMMITS" | jq -r '.[].sha' | while read -r sha; do
+            echo "Commit SHA: $sha"
+          done
+      
+      - name: Get NEW PR commits (if synchronize)
+        if: github.event_name == 'pull_request' && github.event.actionn == 'synchronize'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "NEW PR commit(s) found"
 
 
 # name: Let Secret Check
