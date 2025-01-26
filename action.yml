@@ -20,11 +20,13 @@ runs:
     - name: Checkout code
       shell: bash
       run: |
-        fetch_depth=1
         if [ "${{ inputs.scan_mode }}" = "all" ]; then
-          fetch_depth=0
+          echo "全量扫描模式：解除克隆深度限制"
+          git fetch --prune --unshallow 2> /dev/null || true
+        else
+          echo "差异扫描模式：仅获取最新提交"
+          git fetch --depth=1
         fi
-        git fetch --depth=$fetch_depth
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
 
