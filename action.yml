@@ -10,9 +10,6 @@ inputs:
     description: '扫描模式 (diff/all)'
     required: false
     default: 'all'
-  github_token:
-    description: 'GitHub Token'
-    required: true
 
 runs:
   using: "composite"
@@ -25,8 +22,6 @@ runs:
         else
           git fetch --depth=1
         fi
-      env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
 
     - name: Secret Detection
       shell: bash
@@ -37,6 +32,11 @@ runs:
         set -e
 
         # 结果记录到环境变量
+        echo "cat scan_result.txt at action.yml #36"
+        cat scan_result.txt
+        echo "exit_code"
+        echo "$exit_code"
+
         if [ -s scan_result.txt ]; then
           echo "HAS_LEAKS=true" >> $GITHUB_ENV
         else
