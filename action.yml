@@ -1,35 +1,71 @@
 name: 'Let Secret Monitor'
-description: 'Detect secrets in commits/PRs'
+description: 'Detect secrets in commits/PRs or full repository scan'
 
 inputs:
   custom_prefix:
     description: '自定义环境变量前缀'
     required: false
     default: 'LetSecret'
+  scan_mode:
+    description: '扫描模式 (diff/all)'
+    required: false
+    default: 'diff'
+  github_token:
+    description: 'GitHub Token'
+    required: true
 
 runs:
   using: "composite"
   steps:
+    - name: Checkout code
+      shell: bash
+      run: |
+        # 深度检出代码用于全量扫描
+        fetch_depth=1
+        if [ "${{ inputs.scan_mode }}" = "all" ]; then
+          fetch_depth=0
+        fi
+        git fetch --depth=$fetch_depth
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+
     - name: Secret Detection
       shell: bash
       run: |
-        # 原有检测逻辑
-        if [ -n "$LEAKED_SECRETS" ]; then
-          echo "::error::Found secrets: $LEAKED_SECRETS"
-          exit 1
-        fi
+        # 设置扫描模式
+        SCAN_MODE="${{ inputs.scan_mode }}"
+        echo "Selected scan mode: $SCAN_MODE"
+        
+        # 执行扫描脚本
+        source ${{ github.action_path }}/entrypoint.sh
+        
+        # 保存结果供后续步骤使用
+        echo "LEAKED_SECRETS=$LEAKED_SECRETS" >> $GITHUB_ENV
+        echo "$LEAKED_SECRETS" > scan_result.txt
       env:
         CUSTOM_PREFIX: ${{ inputs.custom_prefix }}
+        SCAN_MODE: ${{ inputs.scan_mode }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
 
     - name: Post PR Comment
       if: ${{ failure() && github.event_name == 'pull_request' }}
       uses: actions/github-script@v6
       with:
         script: |
-          const message = `⚠️ **安全警报** ⚠️\n检测到以下敏感信息：\n${process.env.LEAKED_SECRETS || '未指定详情'}`;
-          github.rest.issues.createComment({
+          // 从文件读取检测结果
+          const fs = require('fs')
+          const results = fs.readFileSync('scan_result.txt', 'utf8')
+          
+          // 构造评论内容
+          const comment = `⚠️ **安全警报** ⚠️
+          扫描模式: ${process.env.SCAN_MODE}
+          检测到以下敏感信息：
+          ${results || '未获取到详细信息'}`
+
+          // 发布评论
+          await github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: message
+            body: comment
           })

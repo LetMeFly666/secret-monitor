@@ -1,4 +1,4 @@
-name: Secret Check
+name: Let Secret Check
 on: [push, pull_request]
 
 permissions:
@@ -10,8 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2  # 必须获取前一次提交用于diff
         
       - uses: LetMeFly666/secret-monitor@master
         with:
