@@ -1,6 +1,10 @@
 name: Secret Check
 on: [push, pull_request]
 
+permissions:
+  contents: read
+  issues: write  # 授权Token可写评论
+
 jobs:
   scan:
     runs-on: ubuntu-latest

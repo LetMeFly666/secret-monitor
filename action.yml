@@ -10,9 +10,26 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Check for secrets
+    - name: Secret Detection
       shell: bash
-      run: ${{ github.action_path }}/entrypoint.sh
+      run: |
+        # 原有检测逻辑
+        if [ -n "$LEAKED_SECRETS" ]; then
+          echo "::error::Found secrets: $LEAKED_SECRETS"
+          exit 1
+        fi
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         CUSTOM_PREFIX: ${{ inputs.custom_prefix }}
+
+    - name: Post PR Comment
+      if: ${{ failure() && github.event_name == 'pull_request' }}
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const message = `⚠️ **安全警报** ⚠️\n检测到以下敏感信息：\n${process.env.LEAKED_SECRETS || '未指定详情'}`;
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: message
+          })
