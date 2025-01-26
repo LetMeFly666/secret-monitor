@@ -35,6 +35,8 @@ runs:
         # 设置扫描模式
         SCAN_MODE="${{ inputs.scan_mode }}"
         echo "Selected scan mode: $SCAN_MODE"
+
+        echo "${{ github.event_name }}"
         
         # 执行扫描脚本
         source ${{ github.action_path }}/entrypoint.sh
@@ -62,6 +64,7 @@ runs:
           检测到以下敏感信息：
           ${results || '未获取到详细信息'}`
 
+          echo "Making 1 commit"
           // 发布评论
           await github.rest.issues.createComment({
             issue_number: context.issue.number,
