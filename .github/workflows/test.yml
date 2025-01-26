@@ -9,7 +9,7 @@ jobs:
         with:
           fetch-depth: 2  # 必须获取前一次提交用于diff
         
-      - uses: LetMeFly666/secret-monitor@v1
+      - uses: LetMeFly666/secret-monitor@master
         with:
           custom_prefix: "MySecret_"  # 可选自定义前缀
         env:
