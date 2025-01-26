@@ -26,7 +26,7 @@ jobs:
           echo "REPO_FULL_NAME = $REPO_FULL_NAME"
           APIURL="https://api.github.com/repos/$REPO_FULL_NAME/pulls/$PR_NUMBER/commits"
           echo "$APIURL"
-          COMMITS=$(curl -f -s -H "Authorization: Bearer $GITHUB_TOKEN" "$APIURL") || exit 1
+          COMMITS=$(curl -f -s -H "Authorization: Bearer $GITHUB_TOKEN" "$APIURL")
           echo "COMMITS: $COMMITS"
           echo "All commits in PR:"
           echo "$COMMITS" | jq '.[].sha'
