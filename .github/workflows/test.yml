@@ -15,7 +15,8 @@ jobs:
         run: sudo apt-get install -y jq
       
       - name: Get ALL PR commits (if open/reopen)
-        if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
+        # if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')  # TODO: debug后取消注释
+        if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -23,8 +24,10 @@ jobs:
           REPO_FULL_NAME=${{ github.repository }}
           echo "PR_NUMBER = $PR_NUMBER"
           echo "REPO_FULL_NAME = $REPO_FULL_NAME"
-          COMMITS=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
-            "https://api.github.com/repos/$REPO_FULL_NAME/pulls/$PR_NUMBER/commits")
+          APIURL="https://api.github.com/repos/$REPO_FULL_NAME/pulls/$PR_NUMBER/commits"
+          echo "$APIURL"
+          COMMITS=$(curl -f -s -H "Authorization: Bearer $GITHUB_TOKEN" "$APIURL") || exit 1
+          echo "COMMITS: $COMMITS"
           echo "All commits in PR:"
           echo "$COMMITS" | jq '.[].sha'
           echo "$COMMITS" | jq -r '.[].sha' | while read -r sha; do
