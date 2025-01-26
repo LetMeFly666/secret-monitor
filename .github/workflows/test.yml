@@ -41,8 +41,8 @@ jobs:
       
       - name: Get NEW PR commits (if synchronize)
         if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
-        # env:
-        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BEFORE_SHA=${{ github.event.before }}
           AFTER_SHA=${{ github.event.after }}
