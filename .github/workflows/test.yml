@@ -1,20 +1,44 @@
-name: Let Secret Check
-on: [push, pull_request]
+# 写一个githubAction，当pr时触发，添加评论“Hello From [Tisfy](https://github.com/Tisfy)”
+name: PR Comment Automation
 
-permissions:
-  contents: read
-  issues: write  # 授权Token可写评论
+on:
+  pull_request:
+    types: [opened]
 
 jobs:
-  scan:
+  add-comment:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
-        
-      - uses: LetMeFly666/secret-monitor@master
+      - name: Add greeting comment
+        uses: actions/github-script@v6
         with:
-          custom_prefix: "MySecret_"  # 可选自定义前缀
-        env:
-          MySecret_DB_PASSWORD: "password123"        # 文本密钥
-          MySecret_IP_REGEX: |
-            /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/ # 正则表达式
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: 'Hello From [Tisfy](https://github.com/Tisfy)'
+            })
+
+# name: Let Secret Check
+# on: [push, pull_request]
+
+# permissions:
+#   contents: read
+#   issues: write  # 授权Token可写评论
+
+# jobs:
+#   scan:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+        
+#       - uses: LetMeFly666/secret-monitor@master
+#         with:
+#           custom_prefix: "MySecret_"  # 可选自定义前缀
+#         env:
+#           MySecret_DB_PASSWORD: "password123"        # 文本密钥
+#           MySecret_IP_REGEX: |
+#             /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/ # 正则表达式
