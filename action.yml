@@ -33,22 +33,25 @@ runs:
     - name: Secret Detection
       shell: bash
       run: |
-        set +e  # 禁用自动报错退出
-        
-        SCAN_MODE="${{ inputs.scan_mode }}"
+        # 初始化检测结果
+        echo "LEAKED_SECRETS=" > scan_result.txt
+        echo "HAS_LEAKS=false" >> $GITHUB_ENV
+
+        # 即使脚本出错也继续执行后续逻辑
+        set +e
         source ${{ github.action_path }}/entrypoint.sh
-        
-        # 记录检测结果
-        if [ -n "$LEAKED_SECRETS" ]; then
+        exit_code=$?
+        set -e
+
+        # 记录脚本执行结果
+        if [ -s scan_result.txt ]; then
           echo "::error::发现敏感信息"
           echo "HAS_LEAKS=true" >> $GITHUB_ENV
-        else
-          echo "HAS_LEAKS=false" >> $GITHUB_ENV
         fi
-        
-        echo "$LEAKED_SECRETS" > scan_result.txt
-        exit 0  # 强制返回成功状态码
-      continue-on-error: true  # 允许后续步骤执行
+
+        # 始终返回成功状态以保证后续步骤执行
+        exit 0
+      continue-on-error: true
       env:
         CUSTOM_PREFIX: ${{ inputs.custom_prefix }}
         SCAN_MODE: ${{ inputs.scan_mode }}

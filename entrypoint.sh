@@ -2,7 +2,7 @@
  # @Author: LetMeFly
  # @Date: 2025-01-26 12:25:39
  # @LastEditors: LetMeFly.xyz
- # @LastEditTime: 2025-01-26 17:43:28
+ # @LastEditTime: 2025-01-26 17:56:44
 ### 
 #!/bin/bash
 
@@ -15,6 +15,7 @@ echo "🔍 检测到密钥变量: $SECRET_VARS"
 
 # 临时存储检测结果
 FOUND_SECRETS=""
+LEAK_DETECTED=false  # 新增泄漏标记
 
 # 获取仓库全量文件（排除.git目录）
 FILE_LIST=$(find . -type f -not -path './.git/*')
@@ -60,12 +61,14 @@ while IFS= read -r file; do
       pattern=$(echo "$secret_value" | sed 's:^/::;s:/$::')
       if echo "$content" | grep -Pq -- "$pattern"; then
         FOUND_SECRETS+="\n- 文件: $file\n  类型: ${var_name}\n  匹配模式: ${secret_value}"
+        LEAK_DETECTED=true
       fi
     
     # 文本匹配模式
     else
       if echo "$content" | grep -Fq -- "$secret_value"; then
         FOUND_SECRETS+="\n- 文件: $file\n  类型: ${var_name}\n  匹配内容: ${secret_value}"
+        LEAK_DETECTED=true
       fi
     fi
   done
@@ -73,24 +76,20 @@ while IFS= read -r file; do
 done <<< "$FILE_LIST"
 
 # 处理检测结果
-if [ -n "$FOUND_SECRETS" ]; then
-  echo "::error::🚨 发现敏感信息！详细内容：${FOUND_SECRETS}"
+if $LEAK_DETECTED; then
+  echo "🚨 发现敏感信息！详细内容："
+  echo -e "$FOUND_SECRETS"
   
-  # PR评论功能
+  # 将结果写入文件供后续步骤使用
+  echo -e "$FOUND_SECRETS" > scan_result.txt
+  
+  # PR评论信息（不再直接退出）
   if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
     PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-    COMMENT="⚠️ **全量扫描安全警报** ⚠️\n检测到以下敏感信息：${FOUND_SECRETS}"
-    
-    # curl -s -X POST \
-    #   -H "Authorization: token $GITHUB_TOKEN" \
-    #   -H "Accept: application/vnd.github.v3+json" \
-    #   "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
-    #   -d "{\"body\":\"$COMMENT\"}"
-    echo "${COMMENT}"
+    COMMENT="⚠️ **全量扫描安全警报** ⚠️\n检测到以下敏感信息：\n${FOUND_SECRETS}"
+    echo "$COMMENT" > comment_body.txt
   fi
-  
-  exit 1
+else
+  echo "✅ 全量扫描完成，未检测到敏感信息"
+  echo "" > scan_result.txt
 fi
-
-echo "✅ 全量扫描完成，未检测到敏感信息"
-exit 0
