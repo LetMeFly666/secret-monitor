@@ -25,9 +25,20 @@ jobs:
           echo "PR_NUMBER = $PR_NUMBER"
           echo "REPO_FULL_NAME = $REPO_FULL_NAME"
           APIURL="https://api.github.com/repos/$REPO_FULL_NAME/pulls/$PR_NUMBER/commits"
-          echo "$APIURL"
-          COMMITS=$(curl -f -s -H "Authorization: Bearer $GITHUB_TOKEN" "$APIURL")
-          echo "COMMITS: $COMMITS"
+          echo "API URL: $APIURL"
+
+          # 使用 -v 参数打印详细的请求和响应信息
+          RESPONSE=$(curl -v -f -s -H "Authorization: Bearer $GITHUB_TOKEN" "$APIURL" 2>&1)
+          HTTP_STATUS=$(echo "$RESPONSE" | grep -oP 'HTTP/\d\.\d \K\d{3}')
+          echo "HTTP Status: $HTTP_STATUS"
+          echo "API Response: $RESPONSE"
+
+          if [[ "$HTTP_STATUS" != "200" ]]; then
+            echo "Error: Failed to fetch commits (HTTP $HTTP_STATUS)"
+            exit 1
+          fi
+
+          COMMITS=$(echo "$RESPONSE" | grep -Pzo '(?s)\{.*\}')
           echo "All commits in PR:"
           echo "$COMMITS" | jq '.[].sha'
           echo "$COMMITS" | jq -r '.[].sha' | while read -r sha; do
