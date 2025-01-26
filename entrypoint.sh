@@ -2,7 +2,7 @@
  # @Author: LetMeFly
  # @Date: 2025-01-26 12:25:39
  # @LastEditors: LetMeFly.xyz
- # @LastEditTime: 2025-01-26 12:26:41
+ # @LastEditTime: 2025-01-26 16:55:47
 ### 
 #!/bin/bash
 
@@ -11,6 +11,7 @@ PREFIX=${CUSTOM_PREFIX:-LetSecret}
 
 # 收集所有符合前缀的密钥/正则
 SECRET_VARS=$(env | grep "^${PREFIX}" | cut -d= -f1)
+echo $SECRET_VARS
 
 # 临时存储检测结果
 FOUND_SECRETS=""
@@ -29,6 +30,7 @@ for var_name in $SECRET_VARS; do
   # 判断是否是正则表达式（以/开头和结尾）
   if [[ "$secret_value" =~ ^/.*/$ ]]; then
     pattern=$(echo "$secret_value" | sed 's:^/::;s:/$::')
+    echo "$DIFF_CONTENT"
     if echo "$DIFF_CONTENT" | grep -P -- "$pattern"; then
       FOUND_SECRETS+="\n- ${var_name} (正则: ${secret_value})"
     fi
