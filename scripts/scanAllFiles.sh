@@ -2,7 +2,7 @@
  # @Author: LetMeFly
  # @Date: 2025-01-27 14:50:34
  # @LastEditors: LetMeFly.xyz
- # @LastEditTime: 2025-01-27 15:34:17
+ # @LastEditTime: 2025-01-27 15:53:44
 ### 
 ###
  # 扫描一个commit hash的所有文件判断是否存在敏感信息
@@ -31,10 +31,16 @@ echo "✅ 所有必要环境变量已设置"
 
 # ------------- 收集所有符合前缀的密钥/正则 -------------
 PREFIX=${SECRET_PREFIX:-LetSecret}
+has_secret=false
 SECRET_VARS=$(env | grep "^${PREFIX}" | cut -d= -f1)
 for var in ${SECRET_VARS[@]}; do
-    echo "🔍检测到密钥变量: $var"
+    echo "🔍 检测到密钥变量: $var"
+    has_secret=true
 done
+if ! $has_secret; then
+    echo "❗ 没有待检测内容"
+    exit 0
+fi
 
 # ------------- 获取仓库全量文件 -------------
 git checkout $COMMIT_SHA
@@ -50,6 +56,7 @@ EXCLUDE_PATHS=(
 )
 
 # ------------- 遍历所有文件 -------------
+LEAK_DETECTED=false
 while IFS= read -r file; do
     # 跳过二进制文件和排除路径
     if file --mime-encoding "$file" | grep -q binary; then
@@ -81,7 +88,7 @@ while IFS= read -r file; do
         else
             if echo "$content" | grep -Fq -- "$secret_value"; then
                 FOUND_SECRETS+="\n- 文件: $file\n  类型: ${var_name}\n  匹配内容: ${secret_value}"
-            LEAK_DETECTED=true
+                LEAK_DETECTED=true
             fi
         fi
     done
@@ -92,8 +99,9 @@ if $LEAK_DETECTED; then
   echo "🚨 发现敏感信息！详细内容："
   echo -e "$FOUND_SECRETS"
   # 将结果写入文件供后续步骤使用
-  echo -e "$FOUND_SECRETS" > scan_result.txt
+  echo -e "$FOUND_SECRETS" > /tmp/scan_result.txt
+  cat /tmp/scan_result.txt
 else
   echo "✅ 全量扫描完成，未检测到敏感信息"
-  echo "" > scan_result.txt
+  echo "" > /tmp/scan_result.txt
 fi
