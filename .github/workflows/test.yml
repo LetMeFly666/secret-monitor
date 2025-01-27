@@ -15,58 +15,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       
-      - name: Install jq
-        run: sudo apt-get install -y jq
-      
       - name: Get ALL PR commits (if open/reopen)
-        # if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')  # TODO: remove
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
           REPO_FULL_NAME=${{ github.repository }}
-          ls
-          pwd
           source scripts/getPrCommits_ALL.sh
-          # https://docs.github.com/zh/rest/pulls/pulls?apiVersion=2022-11-28#list-commits-on-a-pull-request
-          GH_APIURI="/repos/$REPO_FULL_NAME/pulls/$PR_NUMBER/commits"
-          echo "GH_APIURI: $GH_APIURI"
-          RESPONSE=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            $GH_APIURI)
-          echo "All commits in PR:"
-          echo "$RESPONSE" | jq -r '.[].sha' | while read -r sha; do
-            echo "Commit SHA: $sha"
-          done
       
       - name: Get NEW PR commits (if synchronize)
         if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          REPO_FULL_NAME=${{ github.repository }}
+          source scripts/getPrCommits_ALL.sh
+
           BEFORE_SHA=${{ github.event.before }}
           AFTER_SHA=${{ github.event.after }}
-          REPO_FULL_NAME=${{ github.repository }}
-
-          echo "BEFORE_SHA: $BEFORE_SHA"
-          echo "AFTER_SHA: $AFTER_SHA"
-          echo "REPO_FULL_NAME: $REPO_FULL_NAME"
-
-          GH_APIURI="/repos/$REPO_FULL_NAME/compare/$BEFORE_SHA...$AFTER_SHA"
-          echo "GH_APIURI: $GH_APIURI"
-          RESPONSE=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "$GH_APIURI")
-          
-          NEW_COMMITS=$(echo "$RESPONSE" | jq -r '.commits[].sha')
-          echo "New commits in this update:"
-          echo "$NEW_COMMITS"
-          echo "$NEW_COMMITS" | while read -r sha; do
-            echo "New Commit SHA: $sha"
-          done
+          source scripts/getPrCommits_NEW.sh
 
 
 # name: Let Secret Check
