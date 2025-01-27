@@ -1,41 +1,18 @@
-# TODO: PR变少了咋办
-name: PR Commit Info
-
-on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+name: 'Let Secret Detector'
+on: [push]
 
 jobs:
-  get-commits:
+  scan:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: read
-      contents: read
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      
-      - name: Get ALL PR commits (if open/reopen)
-        if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          REPO_FULL_NAME=${{ github.repository }}
-          source scripts/getPrCommits_ALL.sh
-      
-      - name: Get NEW PR commits (if synchronize)
-        if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          REPO_FULL_NAME=${{ github.repository }}
-          source scripts/getPrCommits_ALL.sh
+      - name: Checkout Codes
+        uses: actions/checkout@v2
 
-          BEFORE_SHA=${{ github.event.before }}
-          AFTER_SHA=${{ github.event.after }}
-          source scripts/getPrCommits_NEW.sh
+      - name: Secret Detection
+        env: 
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          source scripts/getPrCommits_ALL.sh
 
 
 # name: Let Secret Check
