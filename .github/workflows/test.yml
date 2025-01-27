@@ -25,7 +25,8 @@ jobs:
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
           REPO_FULL_NAME=${{ github.repository }}
-          source ${{ github.action_path }}/scripts/getPrCommits_ALL.sh
+          ls
+          source scripts/getPrCommits_ALL.sh
           # https://docs.github.com/zh/rest/pulls/pulls?apiVersion=2022-11-28#list-commits-on-a-pull-request
           GH_APIURI="/repos/$REPO_FULL_NAME/pulls/$PR_NUMBER/commits"
           echo "GH_APIURI: $GH_APIURI"
