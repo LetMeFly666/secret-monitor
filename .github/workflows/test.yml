@@ -18,6 +18,9 @@ jobs:
     steps:
       - name: Checkout Codes
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # 拉取完整的提交历史
+          fetch-all: true  # 拉取所有分支
 
       - name: New Commit
         if: github.event_name == 'push'
