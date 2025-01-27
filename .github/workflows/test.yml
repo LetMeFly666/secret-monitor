@@ -12,7 +12,7 @@ jobs:
         env: 
           COMMIT_SHA: ${{ github.sha }}
         run: |
-          source scripts/getPrCommits_ALL.sh
+          source scripts/scanAllFiles.sh
 
 
 # name: Let Secret Check
