@@ -2,7 +2,7 @@
  * @Author: LetMeFly
  * @Date: 2025-01-26 12:24:51
  * @LastEditors: LetMeFly.xyz
- * @LastEditTime: 2025-01-27 17:13:02
+ * @LastEditTime: 2025-01-27 21:31:41
 -->
 # secret-monitor
 
@@ -23,6 +23,16 @@ steps:
     env:
       LetSecret_API_KEY: "your_actual_secret"
 ```
+
+## 触发条件
+
+1. 新增commit(只会检测最后一次commit)中包含秘密信息，Action直接运行失败
+2. 新增PR/PR关闭后重启时，检测PR中所有commit，若包含秘密信息，在PR中评论所有秘密信息所在位置并且Action运行失败
+3. 往开启的PR中新增commit时，检测新增commit和所有commit。
+    + 若新增commit不包含秘密信息：
+       + 若旧commit中仍包含秘密信息，则Action运行失败
+       + 否则Action运行成功
+    + 否则（新commit包含秘密信息）：评论新增commit中秘密信息所在位置并且Action运行失败
 
 ## 自定义配置
 
