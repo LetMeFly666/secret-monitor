@@ -10,7 +10,7 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     env:
-      LETSECRET_PASSWORD: "password123"
+      # LETSECRET_PASSWORD: "password123"
       LETSECRET_SECRETS: ${{ secrets.LETSECRET_SECRETS }}  # 其实是1到9（123...9）
     permissions:
       pull-requests: write
