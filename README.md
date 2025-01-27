@@ -2,7 +2,7 @@
  * @Author: LetMeFly
  * @Date: 2025-01-26 12:24:51
  * @LastEditors: LetMeFly.xyz
- * @LastEditTime: 2025-01-27 07:27:54
+ * @LastEditTime: 2025-01-27 10:45:40
 -->
 # secret-monitor
 
@@ -43,6 +43,6 @@ Debug的时间都够自己写了
 **所需功能**
 
 - [x] 在action中评论（[Code](https://github.com/LetMeFly666/secret-monitor/blob/4281d9a07bd253fca65731369c9748affaa33074/.github/workflows/test.yml#L2-L23)）
-- [x] 读取某次PR的所有commit、向PR中新增commit
+- [x] 读取某次PR的所有commit、向PR中新增commit（[Code](https://github.com/LetMeFly666/secret-monitor/blob/a83dca97bb4aa694ee05153e00eda00ac8f31faf/.github/workflows/test.yml#L2-L38)）
 - [ ] 某commit所有文件检测是否存在密钥，并保存结果
 
