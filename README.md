@@ -2,7 +2,7 @@
  * @Author: LetMeFly
  * @Date: 2025-01-26 12:24:51
  * @LastEditors: LetMeFly.xyz
- * @LastEditTime: 2025-01-27 10:45:40
+ * @LastEditTime: 2025-01-27 16:00:41
 -->
 # secret-monitor
 
@@ -14,7 +14,6 @@
    - 名称格式：`LetSecret_*`（如`LetSecret_DB_PWD`）
    - 值类型：
      - 文本密码：直接填写
-     - 正则表达式：用`/`包裹（如`/\d{3}-\d{4}/`）
 
 2. 添加工作流文件：
 
@@ -23,7 +22,6 @@ steps:
   - uses: LetMeFly666/secret-monitor@v1
     env:
       LetSecret_API_KEY: "your_actual_secret"
-      LetSecret_IP_REGEX: "/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/"
 ```
 
 ## 自定义配置
@@ -46,3 +44,4 @@ Debug的时间都够自己写了
 - [x] 读取某次PR的所有commit、向PR中新增commit（[Code](https://github.com/LetMeFly666/secret-monitor/blob/a83dca97bb4aa694ee05153e00eda00ac8f31faf/.github/workflows/test.yml#L2-L38)）
 - [ ] 某commit所有文件检测是否存在密钥，并保存结果
 
+决定暂不支持正则表达式

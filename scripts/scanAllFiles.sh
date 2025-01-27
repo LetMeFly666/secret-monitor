@@ -2,7 +2,7 @@
  # @Author: LetMeFly
  # @Date: 2025-01-27 14:50:34
  # @LastEditors: LetMeFly.xyz
- # @LastEditTime: 2025-01-27 15:57:31
+ # @LastEditTime: 2025-01-27 16:05:15
 ### 
 ###
  # 扫描一个commit hash的所有文件判断是否存在敏感信息
@@ -77,19 +77,9 @@ while IFS= read -r file; do
     # 检查每个密钥
     for var_name in $SECRET_VARS; do
         secret_value="${!var_name}"
-        # 正则
-        if [[ "$secet_value" =~ ^/.*/$ ]]; then
-            pattern=$(echo "$secret_value" | sed 's:^/::;s:/$::')
-            if echo "$content" | grep -Pq -- "$pattern"; then
-                FOUND_SECRETS+="\n- 文件: $file\n  类型: ${var_name}\n  匹配模式: ${secret_value}"
-                LEAK_DETECTED=true
-            fi
-        # 文本
-        else
-            if echo "$content" | grep -Fq -- "$secret_value"; then
-                FOUND_SECRETS+="\n- 文件: $file\n  类型: ${var_name}\n  匹配内容: ${secret_value}"
-                LEAK_DETECTED=true
-            fi
+        if echo "$content" | grep -Fq -- "$secret_value"; then
+            FOUND_SECRETS+="\n- 文件: $file\n  类型: ${var_name}\n  匹配内容: ${secret_value}"
+            LEAK_DETECTED=true
         fi
     done
 done <<< "$FILE_LIST"
