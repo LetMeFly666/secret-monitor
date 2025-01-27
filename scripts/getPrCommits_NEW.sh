@@ -2,7 +2,7 @@
  # @Author: LetMeFly
  # @Date: 2025-01-27 10:36:25
  # @LastEditors: LetMeFly.xyz
- # @LastEditTime: 2025-01-27 10:40:09
+ # @LastEditTime: 2025-01-27 10:42:59
 ### 
 ###
  # 获取某PR的所有commit Hash
@@ -47,7 +47,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # ----------------------------- 将结果写入文件 -----------------------------
-echo "$RESPONSE" | jq -r '.[].sha' > /tmp/pr_commits_new.txt
+echo "$RESPONSE" | jq -r '.commits[].sha' > /tmp/pr_commits_new.txt
 echo "***BEGIN CAT***"
 cat /tmp/pr_commits_new.txt
 echo "***END CAT***"
