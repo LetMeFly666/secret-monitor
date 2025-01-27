@@ -2,14 +2,14 @@
  # @Author: LetMeFly
  # @Date: 2025-01-27 14:50:34
  # @LastEditors: LetMeFly.xyz
- # @LastEditTime: 2025-01-27 15:53:44
+ # @LastEditTime: 2025-01-27 15:57:31
 ### 
 ###
  # 扫描一个commit hash的所有文件判断是否存在敏感信息
  # Input: 
  #   - commit_sha $COMMIT_SHA
  #   - 【可选】密钥前缀 $SECRET_PREFIX
- # Output: /tmp/pr_commits_new.txt（每行一个commit Hash）
+ # Output: /tmp/scan_result.txt（扫描结果）
 ###
 
 # ----------------------------- 检查必要环境变量 -----------------------------
