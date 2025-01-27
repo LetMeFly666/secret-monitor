@@ -2,14 +2,16 @@
  # @Author: LetMeFly
  # @Date: 2025-01-27 14:50:34
  # @LastEditors: LetMeFly.xyz
- # @LastEditTime: 2025-01-27 16:05:15
+ # @LastEditTime: 2025-01-27 16:41:05
 ### 
 ###
  # 扫描一个commit hash的所有文件判断是否存在敏感信息
  # Input: 
  #   - commit_sha $COMMIT_SHA
  #   - 【可选】密钥前缀 $SECRET_PREFIX
- # Output: /tmp/scan_result.txt（扫描结果）
+ # Output: /tmp/scan_result/commit_sha（发现一次保存一个随机文件）
+ #             - 第一行:文件路径
+ #             - 第二行:出现在哪一行
 ###
 
 # ----------------------------- 检查必要环境变量 -----------------------------
@@ -41,6 +43,11 @@ if ! $has_secret; then
     echo "❗ 没有待检测内容"
     exit 0
 fi
+
+# ------------- 创建结果目录 -------------
+RESULT_DIR="/tmp/scan_result/$COMMIT_SHA"
+mkdir -p "$RESULT_DIR"
+echo "📁 结果保存目录: $RESULT_DIR"
 
 # ------------- 获取仓库全量文件 -------------
 git checkout $COMMIT_SHA
@@ -77,21 +84,24 @@ while IFS= read -r file; do
     # 检查每个密钥
     for var_name in $SECRET_VARS; do
         secret_value="${!var_name}"
-        if echo "$content" | grep -Fq -- "$secret_value"; then
-            FOUND_SECRETS+="\n- 文件: $file\n  类型: ${var_name}\n  匹配内容: ${secret_value}"
+        # 查找敏感信息所在行
+        line_numbers=$(echo "$content" | grep -nF -- "$secret_value" | cut -d: -f1)
+        if [[ -n "$line_numbers" ]]; then
             LEAK_DETECTED=true
+            # 为每个检测到的敏感信息生成一个结果文件
+            for line in $line_numbers; do
+                result_file=$(mktemp -p "$RESULT_DIR" "result_XXXXXX.txt")
+                echo "$file" > "$result_file"
+                echo "$line" >> "$result_file"
+                echo "🔍 检测到敏感信息: 文件 $file, 行 $line"
+            done
         fi
     done
 done <<< "$FILE_LIST"
 
 # ------------- 处理检测结果 -------------
 if $LEAK_DETECTED; then
-  echo "🚨 发现敏感信息！详细内容："
-  echo -e "$FOUND_SECRETS"
-  # 将结果写入文件供后续步骤使用
-  echo -e "$FOUND_SECRETS" > /tmp/scan_result.txt
-  cat /tmp/scan_result.txt
+  echo "🚨 发现敏感信息！详细内容已保存至 $RESULT_DIR"
 else
   echo "✅ 全量扫描完成，未检测到敏感信息"
-  echo "" > /tmp/scan_result.txt
 fi
