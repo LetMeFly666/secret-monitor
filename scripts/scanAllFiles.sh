@@ -30,7 +30,7 @@ fi
 echo "✅ 所有必要环境变量已设置"
 
 # ------------- 收集所有符合前缀的密钥/正则 -------------
-PREFIX=${SECRET_PREFIX:-LetSecret}
+PREFIX=${SECRET_PREFIX:-LETSECRET}
 has_secret=false
 SECRET_VARS=$(env | grep "^${PREFIX}" | cut -d= -f1)
 for var in ${SECRET_VARS[@]}; do

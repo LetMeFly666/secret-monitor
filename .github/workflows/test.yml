@@ -11,7 +11,7 @@ jobs:
       - name: Secret Detection
         env: 
           COMMIT_SHA: ${{ github.sha }}
-          LetSecret_PASSWORD: "password123"
+          LETSECRET_PASSWORD: "password123"
           LETSECRET_SECRETS: ${{ secrets.LETSECRET_SECRETS }}  # 其实是123456789
         run: |
           source scripts/scanAllFiles.sh
