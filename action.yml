@@ -22,7 +22,6 @@ runs:
       uses: actions/checkout@v2
       with:
         fetch-depth: 0   # 拉取完整的提交历史
-        fetch-all: true  # 拉取所有分支
 
     - name: New Commit
       if: github.event_name == 'push'
@@ -32,7 +31,8 @@ runs:
       run: |
         source $GITHUB_ACTION_PATH/scripts/scanAllFiles.sh
         if [[ $(find "/tmp/scan_result/$COMMIT_SHA" -type f) ]]; then
-          echo "::warning file=README.md,line=1::secrets detected"
+          echo "::warning::secrets detected"
+          echo "secrets detected"
           exit 1
         fi
 

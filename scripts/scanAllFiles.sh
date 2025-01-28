@@ -2,7 +2,7 @@
  # @Author: LetMeFly
  # @Date: 2025-01-27 14:50:34
  # @LastEditors: LetMeFly.xyz
- # @LastEditTime: 2025-01-27 16:41:05
+ # @LastEditTime: 2025-01-28 11:41:15
 ### 
 ###
  # 扫描一个commit hash的所有文件判断是否存在敏感信息
@@ -47,7 +47,7 @@ fi
 # ------------- 创建结果目录 -------------
 RESULT_DIR="/tmp/scan_result/$COMMIT_SHA"
 mkdir -p "$RESULT_DIR"
-echo "📁 结果保存目录: $RESULT_DIR"
+# echo "📁 结果保存目录: $RESULT_DIR"
 
 # ------------- 获取仓库全量文件 -------------
 git checkout $COMMIT_SHA

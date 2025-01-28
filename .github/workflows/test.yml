@@ -9,8 +9,6 @@ on:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    env:
-      LETSECRET_SECRETS: ${{ secrets.LETSECRET_SECRETS }}  # 其实是1到9（123...9）
     permissions:
       pull-requests: write
       contents: read
@@ -19,6 +17,8 @@ jobs:
         uses: LetMeFly666/secret-monitor@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          LETSECRET_SECRETS: ${{ secrets.LETSECRET_SECRETS }}  # 其实是1到9（123...9）
         
 
 # name: 'Let Secret Detector'
@@ -43,7 +43,6 @@ jobs:
 #         uses: actions/checkout@v2
 #         with:
 #           fetch-depth: 0  # 拉取完整的提交历史
-#           fetch-all: true  # 拉取所有分支
 
 #       - name: New Commit
 #         if: github.event_name == 'push'

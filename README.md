@@ -2,7 +2,7 @@
  * @Author: LetMeFly
  * @Date: 2025-01-26 12:24:51
  * @LastEditors: LetMeFly.xyz
- * @LastEditTime: 2025-01-28 10:52:25
+ * @LastEditTime: 2025-01-28 11:40:45
 -->
 # secret-monitor
 
@@ -57,3 +57,7 @@ Debug的时间都够自己写了
 - [x] 某commit所有文件检测是否存在密钥，并保存结果（[Code](https://github.com/LetMeFly666/secret-monitor/blob/e56eea1a103e640e35531f85e0490ab3c723fd1f/.github/workflows/test.yml#L1-L17)）
 
 决定暂不支持正则表达式
+
+### v0.3 action.yml化，以供其他仓库调用
+
+- [ ] 确保commit_hash不会出现在action的log中，否则细心的人可能据此访问“历史悬空commit”
