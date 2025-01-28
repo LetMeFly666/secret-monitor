@@ -19,17 +19,9 @@ runs:
   using: "composite"
   steps:
     - name: Checkout Codes
-      env:
-        REPO_FULL_NAME: ${{ github.repository }}
-        GITHUB_TOKEN: ${{ inputs.github_token }}
-      shell: bash
-      run: |
-        git clone --quiet --no-checkout https://${{ github.actor }}:${GITHUB_TOKEN}@github.com/${REPO_FULL_NAME}.git .
-        cd $(basename ${REPO_FULL_NAME})
-        git fetch --all
-        git checkout $(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
-        latest_sha=$(git rev-parse HEAD)
-        echo "::add-mask::$latest_sha"
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: New Commit
       if: github.event_name == 'push'
