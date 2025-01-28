@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: run the action
         uses: LetMeFly666/secret-monitor@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
         
 
 # name: 'Let Secret Detector'

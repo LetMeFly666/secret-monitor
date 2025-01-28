@@ -6,6 +6,9 @@ branding:
   color: 'red'
 
 inputs:
+  github_token:
+    description: '具有写pr和读contents权限的github token'
+    required: true
   custom_prefix:
     description: '自定义环境变量前缀'
     required: false
@@ -27,7 +30,7 @@ runs:
       env: 
         COMMIT_SHA: ${{ github.sha }}
       run: |
-        source scripts/scanAllFiles.sh
+        source $GITHUB_ACTION_PATH/scripts/scanAllFiles.sh
         if [[ $(find "/tmp/scan_result/$COMMIT_SHA" -type f) ]]; then
           echo "::warning file=README.md,line=1::secrets detected"
           exit 1
@@ -37,15 +40,15 @@ runs:
       if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
       shell: bash
       env: 
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
         REPO_FULL_NAME: ${{ github.repository }}
       run: |
-        source scripts/getPrCommits_ALL.sh
+        source $GITHUB_ACTION_PATH/scripts/getPrCommits_ALL.sh
         hasLeak=false
         while IFS= read -r commit_hash; do
           export COMMIT_SHA="$commit_hash"
-          source scripts/scanAllFiles.sh
+          source $GITHUB_ACTION_PATH/scripts/scanAllFiles.sh
           if [[ $(find "/tmp/scan_result/$COMMIT_SHA" -type f) ]]; then
             echo "::warning::secrets detected in commit $COMMIT_SHA"
             hasLeak=true
@@ -57,18 +60,18 @@ runs:
       if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
       shell: bash
       env: 
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
         BEFORE_SHA: ${{ github.event.before }}
         AFTER_SHA: ${{ github.event.after }}
         REPO_FULL_NAME: ${{ github.repository }}
       run: |
         # 获取新commit
-        source scripts/getPrCommits_NEW.sh
+        source $GITHUB_ACTION_PATH/scripts/getPrCommits_NEW.sh
         hasLeak=false
         while IFS= read -r commit_hash; do
           export COMMIT_SHA="$commit_hash"
-          source scripts/scanAllFiles.sh
+          source $GITHUB_ACTION_PATH/scripts/scanAllFiles.sh
           if [[ $(find "/tmp/scan_result/$COMMIT_SHA" -type f) ]]; then
             echo "::warning::secrets detected in commit $COMMIT_SHA"
             hasLeak=true
@@ -78,11 +81,11 @@ runs:
         # 备份新commit的scan_result
         mv /tmp/scan_result /tmp/scan_result.bak
         # 也读旧commit
-        source scripts/getPrCommits_ALL.sh
+        source $GITHUB_ACTION_PATH/scripts/getPrCommits_ALL.sh
         hasOldLeak=false
         while IFS= read -r commit_hash; do
           export COMMIT_SHA="$commit_hash"
-          source scripts/scanAllFiles.sh
+          source $GITHUB_ACTION_PATH/scripts/scanAllFiles.sh
           if [[ $(find "/tmp/scan_result/$COMMIT_SHA" -type f) ]]; then
             echo "::warning::secrets detected in commit $COMMIT_SHA"
             hasOldLeak=true
@@ -101,7 +104,7 @@ runs:
         REPO_FULL_NAME: ${{ github.repository }}
       run: |
         if [[ $hasLeak == 'true' ]]; then
-          source scripts/generate1Commit.sh
+          source $GITHUB_ACTION_PATH/scripts/generate1Commit.sh
         else
           echo "新commit不包含敏感信息，但历史敏感信息仍未清除" > /tmp/comment_body.txt
         fi
