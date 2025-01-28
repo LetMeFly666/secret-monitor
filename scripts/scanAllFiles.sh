@@ -2,7 +2,7 @@
  # @Author: LetMeFly
  # @Date: 2025-01-27 14:50:34
  # @LastEditors: LetMeFly.xyz
- # @LastEditTime: 2025-01-28 13:47:33
+ # @LastEditTime: 2025-01-28 13:59:17
 ### 
 ###
  # 扫描一个commit hash的所有文件判断是否存在敏感信息
@@ -50,8 +50,8 @@ mkdir -p "$RESULT_DIR"
 # echo "📁 结果保存目录: $RESULT_DIR"
 
 # ------------- 获取仓库全量文件 -------------
-echo "git switch"
-git switch --detach $COMMIT_SHA # &> /dev/null
+echo "git switch --detach ****"
+git switch --detach $COMMIT_SHA &> /dev/null
 FILE_LIST=$(find . -type f -not -path './.git/*')
 echo "📂 待扫描文件数: $(echo "$FILE_LIST" | wc -l)"
 EXCLUDE_PATHS=(
@@ -64,6 +64,7 @@ EXCLUDE_PATHS=(
 )
 
 # ------------- 遍历所有文件 -------------
+echo "begin to scan file"
 LEAK_DETECTED=false
 while IFS= read -r file; do
     # 跳过二进制文件和排除路径
@@ -81,7 +82,9 @@ while IFS= read -r file; do
     done
     [[ $skip == true ]] && continue
     # 读取文件内容
+    echo "read content"
     content=$(cat "$file")
+    cat $content
     # 检查每个密钥
     for var_name in $SECRET_VARS; do
         secret_value="${!var_name}"
