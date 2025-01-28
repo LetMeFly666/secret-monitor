@@ -2,7 +2,7 @@
  * @Author: LetMeFly
  * @Date: 2025-01-26 12:24:51
  * @LastEditors: LetMeFly.xyz
- * @LastEditTime: 2025-01-28 11:40:45
+ * @LastEditTime: 2025-01-28 11:49:24
 -->
 # secret-monitor
 
@@ -61,3 +61,4 @@ Debug的时间都够自己写了
 ### v0.3 action.yml化，以供其他仓库调用
 
 - [ ] 确保commit_hash不会出现在action的log中，否则细心的人可能据此访问“历史悬空commit”
+- [ ] 自定义前缀定义了但是未使用

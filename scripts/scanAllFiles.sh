@@ -2,7 +2,7 @@
  # @Author: LetMeFly
  # @Date: 2025-01-27 14:50:34
  # @LastEditors: LetMeFly.xyz
- # @LastEditTime: 2025-01-28 11:41:15
+ # @LastEditTime: 2025-01-28 11:51:01
 ### 
 ###
  # 扫描一个commit hash的所有文件判断是否存在敏感信息
@@ -50,7 +50,8 @@ mkdir -p "$RESULT_DIR"
 # echo "📁 结果保存目录: $RESULT_DIR"
 
 # ------------- 获取仓库全量文件 -------------
-git checkout $COMMIT_SHA
+echo "git switch"
+git switch $COMMIT_SHA &> /dev/null
 FILE_LIST=$(find . -type f -not -path './.git/*')
 echo "📂 待扫描文件数: $(echo "$FILE_LIST" | wc -l)"
 EXCLUDE_PATHS=(
