@@ -2,7 +2,7 @@
  # @Author: LetMeFly
  # @Date: 2025-01-27 14:50:34
  # @LastEditors: LetMeFly.xyz
- # @LastEditTime: 2025-01-28 14:05:45
+ # @LastEditTime: 2025-01-28 14:20:42
 ### 
 ###
  # 扫描一个commit hash的所有文件判断是否存在敏感信息
@@ -82,17 +82,18 @@ while IFS= read -r file; do
     done
     [[ $skip == true ]] && continue
     # 读取文件内容
-    echo "read content"
     content=$(cat "$file")
-    echo "$file"
-    echo "$content"
+    echo "analyzing: $file"
+    if [ -z "$content" ]; then  # 空文件
+        continue
+    fi
     # 检查每个密钥
     for var_name in $SECRET_VARS; do
         secret_value="${!var_name}"
         # 查找敏感信息所在行
         echo $var_name
         echo $secret_value
-        line_numbers=$(echo "$content" | grep -nF -- "$secret_value" | cut -d: -f1)
+        line_numbers=$(echo "$content" | grep -nF -- "$secret_value" || true | cut -d: -f1)
         echo $line_numbers
         if [[ -n "$line_numbers" ]]; then
             LEAK_DETECTED=true
