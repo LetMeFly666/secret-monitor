@@ -21,6 +21,7 @@ runs:
     - name: Checkout Codes
       env:
         REPO_FULL_NAME: ${{ github.repository }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
       shell: bash
       run: |
         git clone --quiet --no-checkout git@github.com/${REPO_FULL_NAME}.git .
