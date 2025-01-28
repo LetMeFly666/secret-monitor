@@ -51,7 +51,7 @@ mkdir -p "$RESULT_DIR"
 
 # ------------- 获取仓库全量文件 -------------
 echo "git switch"
-git switch $COMMIT_SHA &> /dev/null
+git switch $COMMIT_SHA # &> /dev/null
 FILE_LIST=$(find . -type f -not -path './.git/*')
 echo "📂 待扫描文件数: $(echo "$FILE_LIST" | wc -l)"
 EXCLUDE_PATHS=(
