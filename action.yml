@@ -1,78 +1,129 @@
 name: 'Let Secret Monitor'
 description: 'Detect secrets in commits/PRs or full repository scan'
+author: 'LetMeFly666'
+branding:
+  icon: 'shield'
+  color: 'red'
 
 inputs:
   custom_prefix:
     description: '自定义环境变量前缀'
     required: false
     default: 'LetSecret'
-  scan_mode:
-    description: '扫描模式 (diff/all)'
-    required: false
-    default: 'all'
+  
 
 runs:
   using: "composite"
   steps:
-    - name: Checkout code
+    - name: Checkout Codes
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0   # 拉取完整的提交历史
+        fetch-all: true  # 拉取所有分支
+
+    - name: New Commit
+      if: github.event_name == 'push'
       shell: bash
+      env: 
+        COMMIT_SHA: ${{ github.sha }}
       run: |
-        if [ "${{ inputs.scan_mode }}" = "all" ]; then
-          git fetch --prune --unshallow 2> /dev/null || true
-        else
-          git fetch --depth=1
+        source scripts/scanAllFiles.sh
+        if [[ $(find "/tmp/scan_result/$COMMIT_SHA" -type f) ]]; then
+          echo "::warning file=README.md,line=1::secrets detected"
+          exit 1
         fi
 
-    - name: Secret Detection
+    - name: PR - (re)opened
+      if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
       shell: bash
+      env: 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        REPO_FULL_NAME: ${{ github.repository }}
       run: |
-        set +e
-        source ${{ github.action_path }}/entrypoint.sh
-        exit_code=$?
-        set -e
-
-        # 结果记录到环境变量
-        echo "cat scan_result.txt at action.yml #36"
-        cat scan_result.txt
-        echo "exit_code"
-        echo "$exit_code"
-
-        if [ -s scan_result.txt ]; then
-          echo "HAS_LEAKS=true" >> $GITHUB_ENV
-        else
-          echo "HAS_LEAKS=false" >> $GITHUB_ENV
-        fi
-        
-        # 始终返回成功以保证后续步骤执行
-        exit 0
-      continue-on-error: true
+        source scripts/getPrCommits_ALL.sh
+        hasLeak=false
+        while IFS= read -r commit_hash; do
+          export COMMIT_SHA="$commit_hash"
+          source scripts/scanAllFiles.sh
+          if [[ $(find "/tmp/scan_result/$COMMIT_SHA" -type f) ]]; then
+            echo "::warning::secrets detected in commit $COMMIT_SHA"
+            hasLeak=true
+          fi
+        done < /tmp/pr_commits_all.txt
+        echo "hasLeak=$hasLeak" >> $GITHUB_ENV
+    
+    - name: PR - synchronize
+      if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
+      shell: bash
+      env: 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        BEFORE_SHA: ${{ github.event.before }}
+        AFTER_SHA: ${{ github.event.after }}
+        REPO_FULL_NAME: ${{ github.repository }}
+      run: |
+        # 获取新commit
+        source scripts/getPrCommits_NEW.sh
+        hasLeak=false
+        while IFS= read -r commit_hash; do
+          export COMMIT_SHA="$commit_hash"
+          source scripts/scanAllFiles.sh
+          if [[ $(find "/tmp/scan_result/$COMMIT_SHA" -type f) ]]; then
+            echo "::warning::secrets detected in commit $COMMIT_SHA"
+            hasLeak=true
+          fi
+        done < /tmp/pr_commits_new.txt
+        echo "hasLeak=$hasLeak" >> $GITHUB_ENV
+        # 备份新commit的scan_result
+        mv /tmp/scan_result /tmp/scan_result.bak
+        # 也读旧commit
+        source scripts/getPrCommits_ALL.sh
+        hasOldLeak=false
+        while IFS= read -r commit_hash; do
+          export COMMIT_SHA="$commit_hash"
+          source scripts/scanAllFiles.sh
+          if [[ $(find "/tmp/scan_result/$COMMIT_SHA" -type f) ]]; then
+            echo "::warning::secrets detected in commit $COMMIT_SHA"
+            hasOldLeak=true
+          fi
+        done < /tmp/pr_commits_all.txt
+        echo "hasOldLeak=$hasOldLeak" >> $GITHUB_ENV
+        # 恢复旧result
+        rm -rf /tmp/scan_result
+        mv /tmp/scan_result.bak /tmp/scan_result
+    
+    - name: PR - generate Commit Message
+      if: env.hasLeak == 'true' || env.hasOldLeak == 'true'
+      id: generate-comment
+      shell: bash
       env:
-        CUSTOM_PREFIX: ${{ inputs.custom_prefix }}
-        SCAN_MODE: ${{ inputs.scan_mode }}
-        GITHUB_TOKEN: ${{ inputs.github_token }}
+        REPO_FULL_NAME: ${{ github.repository }}
+      run: |
+        if [[ $hasLeak == 'true' ]]; then
+          source scripts/generate1Commit.sh
+        else
+          echo "新commit不包含敏感信息，但历史敏感信息仍未清除" > /tmp/comment_body.txt
+        fi
+        COMMENT_BODY=$(cat /tmp/comment_body.txt)
+        echo "commentBody<<EOF" >> $GITHUB_OUTPUT
+        echo "$COMMENT_BODY" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
 
-    - name: Post PR Comment
-      if: ${{ env.HAS_LEAKS == 'true' && github.event_name == 'pull_request' }}
+    - name: PR - Commit
+      if: env.hasLeak == 'true'
       uses: actions/github-script@v6
       with:
         script: |
-          const fs = require('fs');
-          try {
-            const results = fs.readFileSync('scan_result.txt', 'utf8');
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `⚠️ 检测到敏感信息：\n${results}`
-            });
-          } catch (e) {
-            core.error(`评论失败: ${e}`);
-          }
-
-    - name: Check Results
+          const commentBody = `${{ steps.generate-comment.outputs.commentBody }}`;
+          github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.payload.pull_request.number,
+            body: commentBody
+          });
+    
+    - name: EXIT 1
+      if: env.hasLeak == 'true' || env.hasOldLeak == 'true'
       shell: bash
-      run: |
-        if [ "$HAS_LEAKS" = "true" ]; then
-          echo "::error::发现敏感信息，流程终止"
-          exit 1
-        fi
+      run: exit 1
