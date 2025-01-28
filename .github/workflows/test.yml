@@ -92,12 +92,16 @@ jobs:
           mv /tmp/scan_result.bak /tmp/scan_result
       
       - name: PR - generate Commit Message
-        if: env.hasLeak == 'true'
+        if: env.hasLeak == 'true' || env.hasOldLeak == 'true'
         id: generate-comment
         env:
           REPO_FULL_NAME: ${{ github.repository }}
         run: |
-          source scripts/generate1Commit.sh
+          if [[ $hasLeak == 'true' ]]; then
+            source scripts/generate1Commit.sh
+          else
+            echo "新commit不包含敏感信息，但历史敏感信息仍未清除" > /tmp/comment_body.txt
+          fi
           COMMENT_BODY=$(cat /tmp/comment_body.txt)
           echo "commentBody<<EOF" >> $GITHUB_OUTPUT
           echo "$COMMENT_BODY" >> $GITHUB_OUTPUT
