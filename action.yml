@@ -50,7 +50,7 @@ runs:
           export COMMIT_SHA="$commit_hash"
           source $GITHUB_ACTION_PATH/scripts/scanAllFiles.sh
           if [[ $(find "/tmp/scan_result/$COMMIT_SHA" -type f) ]]; then
-            echo "::warning::secrets detected in commit $COMMIT_SHA"
+            echo "::error::secrets detected in commit $COMMIT_SHA"
             hasLeak=true
           fi
         done < /tmp/pr_commits_all.txt
@@ -73,7 +73,7 @@ runs:
           export COMMIT_SHA="$commit_hash"
           source $GITHUB_ACTION_PATH/scripts/scanAllFiles.sh
           if [[ $(find "/tmp/scan_result/$COMMIT_SHA" -type f) ]]; then
-            echo "::warning::secrets detected in commit $COMMIT_SHA"
+            echo "::error::secrets detected in commit $COMMIT_SHA"
             hasLeak=true
           fi
         done < /tmp/pr_commits_new.txt
@@ -87,7 +87,7 @@ runs:
           export COMMIT_SHA="$commit_hash"
           source $GITHUB_ACTION_PATH/scripts/scanAllFiles.sh
           if [[ $(find "/tmp/scan_result/$COMMIT_SHA" -type f) ]]; then
-            echo "::warning::secrets detected in commit $COMMIT_SHA"
+            echo "::error::secrets detected in commit $COMMIT_SHA"
             hasOldLeak=true
           fi
         done < /tmp/pr_commits_all.txt
@@ -114,7 +114,7 @@ runs:
         echo "EOF" >> $GITHUB_OUTPUT
 
     - name: PR - Commit
-      if: env.hasLeak == 'true'
+      if: env.hasLeak == 'true' || env.hasOldLeak == 'true'
       uses: actions/github-script@v6
       with:
         script: |
