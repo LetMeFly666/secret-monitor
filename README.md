@@ -2,29 +2,39 @@
  * @Author: LetMeFly
  * @Date: 2025-01-26 12:24:51
  * @LastEditors: LetMeFly.xyz
- * @LastEditTime: 2025-01-28 15:07:09
+ * @LastEditTime: 2025-01-28 15:47:09
 -->
 # secret-monitor
 
-一个简单的密钥监测Action脚本，在commit时或pr时检测是否包含密钥
+一个简单的密钥监测Action脚本，在commit时或pr时检测是否包含密钥/密码
 
 ## 使用方法
 
-1. 在仓库Settings > Secrets中配置密钥：
-   - 名称格式：`LetSecret_*`（如`LetSecret_DB_PWD`）
-   - 值类型：
-     - 文本密码：直接填写
-
-2. 添加工作流文件：
-
 ```yaml
-steps:
-  - uses: LetMeFly666/secret-monitor@v1
-    env:
-      LetSecret_API_KEY: "your_actual_secret"
+name: 'Test action'
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: run the action
+        uses: LetMeFly666/secret-monitor@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          LETSECRET_SECRETS: ${{ secrets.LETSECRET_TEST_VALUEIS1TO9 }}  # 这里可以设置为环境变量
 ```
 
-## 触发条件
+## 触发条件/行为表现
 
 1. 新增commit时，检测最后一次commit中是否包含秘密信息
     + 若包含：Action直接运行失败
@@ -44,6 +54,8 @@ steps:
 |---------------|----------|--------------------|
 | custom_prefix | LetSecret | 环境变量前缀       |
 
+暂不支持修改
+
 ## 开发日志
 
 ### v0.1尝试用DeepSeek写
@@ -62,5 +74,5 @@ Debug的时间都够自己写了
 
 ### v0.3 action.yml化，以供其他仓库调用
 
-- [ ] 确保commit_hash不会出现在action的log中，否则细心的人可能据此访问“历史悬空commit”
+- [x] ~~确保commit_hash不会出现在action的log中，否则细心的人可能据此访问“历史悬空commit”~~  还是手动删action log吧
 - [ ] 自定义前缀定义了但是未使用
