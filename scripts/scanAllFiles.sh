@@ -2,7 +2,7 @@
  # @Author: LetMeFly
  # @Date: 2025-01-27 14:50:34
  # @LastEditors: LetMeFly.xyz
- # @LastEditTime: 2025-01-28 14:23:51
+ # @LastEditTime: 2025-01-28 15:10:26
 ### 
 ###
  # 扫描一个commit hash的所有文件判断是否存在敏感信息
@@ -37,6 +37,7 @@ has_secret=false
 SECRET_VARS=$(env | grep "^${PREFIX}" | cut -d= -f1)
 for var in ${SECRET_VARS[@]}; do
     echo "🔍 检测到密钥变量: $var"
+    echo "::add-mask::$var"
     has_secret=true
 done
 if ! $has_secret; then
@@ -45,13 +46,14 @@ if ! $has_secret; then
 fi
 
 # ------------- 创建结果目录 -------------
+echo "::add-mask::$COMMIT_SHA"
 RESULT_DIR="/tmp/scan_result/$COMMIT_SHA"
 mkdir -p "$RESULT_DIR"
-# echo "📁 结果保存目录: $RESULT_DIR"
+echo "📁 结果保存目录: $RESULT_DIR"
 
 # ------------- 获取仓库全量文件 -------------
-echo "git switch --detach ****"
-git switch --detach $COMMIT_SHA &> /dev/null
+echo "git switch --detach $COMMIT_SHA
+git switch --detach $COMMIT_SHA #  &> /dev/null
 FILE_LIST=$(find . -type f -not -path './.git/*')
 echo "📂 待扫描文件数: $(echo "$FILE_LIST" | wc -l)"
 EXCLUDE_PATHS=(
