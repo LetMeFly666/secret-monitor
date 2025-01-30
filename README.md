@@ -2,7 +2,7 @@
  * @Author: LetMeFly
  * @Date: 2025-01-26 12:24:51
  * @LastEditors: LetMeFly.xyz
- * @LastEditTime: 2025-01-28 15:47:09
+ * @LastEditTime: 2025-01-30 10:00:19
 -->
 # secret-monitor
 
@@ -15,7 +15,7 @@ name: 'Test action'
 on:
   push:
     branches:
-      - '*'
+      - '**'
   pull_request:
     types: [opened, synchronize, reopened]
 
